@@ -1,3 +1,5 @@
+#/bin/bash
+
 A_RECORD=$1
 DOMAIN=$2
 
