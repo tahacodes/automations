@@ -3,32 +3,6 @@
 sudo apt update
 sudo apt install -y nginx easy-rsa openssl
 
-sudo echo """
-server {
-        listen 80;
-        listen [::]:80;
-        server_name _;
-        return 301 https://\$host\$request_uri;
-}
-
-server {
-        listen 443 ssl;
-        listen [::]:443 ssl;
-
-        ssl_certificate /etc/ssl/webserver/webserver.crt;
-        ssl_certificate_key /etc/ssl/webserver/webserver.key;
-
-        server_name _;
-
-        root /var/www/html;
-        index index.html index.htm index.nginx-debian.html;
-
-        location / {
-                try_files $uri $uri/ =404;
-        }
-}
-""" > /etc/nginx/sites-available/default
-
 mkdir /home/ubuntu/easy-rsa
 ln -s /usr/share/easy-rsa/* /home/ubuntu/easy-rsa/
 chmod 700 /home/ubuntu/easy-rsa/
@@ -60,6 +34,32 @@ cd /home/ubuntu/easy-rsa
 sudo mkdir /etc/ssl/webserver
 sudo cp /home/ubuntu/easy-rsa/pki/issued/webserver.crt /etc/ssl/webserver/
 sudo cp /home/ubuntu/practice-csr/webserver.key /etc/ssl/webserver/
+
+sudo echo """
+server {
+        listen 80;
+        listen [::]:80;
+        server_name _;
+        return 301 https://\$host\$request_uri;
+}
+
+server {
+        listen 443 ssl;
+        listen [::]:443 ssl;
+
+        ssl_certificate /etc/ssl/webserver/webserver.crt;
+        ssl_certificate_key /etc/ssl/webserver/webserver.key;
+
+        server_name _;
+
+        root /var/www/html;
+        index index.html index.htm index.nginx-debian.html;
+
+        location / {
+                try_files $uri $uri/ =404;
+        }
+}
+""" > /etc/nginx/sites-available/default
 
 sudo nginx -t
 sudo systemctl restart nginx
