@@ -1,9 +1,9 @@
 #!/bin/bash
 
-apt update && apt upgrade -y
-apt install -y nginx easy-rsa openssl
+sudo apt update
+sudo apt install -y nginx easy-rsa openssl
 
-echo """
+sudo echo """
 server {
         listen 80;
         listen [::]:80;
@@ -29,10 +29,11 @@ server {
 }
 """ > /etc/nginx/sites-available/default
 
-mkdir ~/easy-rsa
-ln -s /usr/share/easy-rsa/* ~/easy-rsa/
-chmod 700 ~/easy-rsa/
-~/easy-rsa
+mkdir /home/ubuntu/easy-rsa
+ln -s /usr/share/easy-rsa/* /home/ubuntu/easy-rsa/
+chmod 700 /home/ubuntu/easy-rsa/
+cd /home/ubuntu/easy-rsa
+./easyrsa init-pki
 
 echo """
 set_var EASYRSA_REQ_COUNTRY    \"US\"
@@ -43,22 +44,24 @@ set_var EASYRSA_REQ_EMAIL      \"admin@webserver.local\"
 set_var EASYRSA_REQ_OU         \"Community\"
 set_var EASYRSA_ALGO           \"ec\"
 set_var EASYRSA_DIGEST         \"sha512\"
-""" > ~/easy-rsa/vars
+""" > /home/ubuntu/easy-rsa/vars
 
-./easyrsa build-ca
-mkdir ~/practice-csr
-cd ~/practice-csr
+./easyrsa build-ca nopass
+mkdir /home/ubuntu/practice-csr
+cd /home/ubuntu/practice-csr
 openssl genrsa -out webserver.key
 openssl req -new -key webserver.key -out webserver.req -subj \
 /C=US/ST=New\ York/L=New\ York\ City/O=tahacodes/OU=IT/CN=www.webserver.local/emailAddress=admin@webserver.local
 
-cd ~/easy-rsa
+cd /home/ubuntu/easy-rsa
 ./easyrsa import-req ../practice-csr/webserver.req webserver
 ./easyrsa sign-req server webserver
 
-mkdir /etc/ssl/webserver
-cp /home/ubuntu/easy-rsa/pki/issued/webserver.crt /etc/ssl/webserver/
-cp /home/ubuntu/practice-csr/webserver.key /etc/ssl/webserver/
+sudo mkdir /etc/ssl/webserver
+sudo cp /home/ubuntu/easy-rsa/pki/issued/webserver.crt /etc/ssl/webserver/
+sudo cp /home/ubuntu/practice-csr/webserver.key /etc/ssl/webserver/
 
-nginx -t
-systemctl restart nginx
+sudo nginx -t
+sudo systemctl restart nginx
+
+echo "DONE."
