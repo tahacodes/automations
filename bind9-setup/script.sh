@@ -12,9 +12,7 @@ fi
 DNSSERVER_IP=$(curl -4 icanhazip.com)
 BIND_CONFIG_PREFIX='/etc/bind'
 
-apt update
-apt upgrade -y
-
+apt update && apt upgrade -y
 apt install -y bind9 bind9-doc
 
 echo """
