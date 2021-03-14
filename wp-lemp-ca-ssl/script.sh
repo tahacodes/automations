@@ -14,10 +14,12 @@ set_var EASYRSA_REQ_COUNTRY    \"US\"
 set_var EASYRSA_REQ_PROVINCE   \"New York\"
 set_var EASYRSA_REQ_CITY       \"New York City\"
 set_var EASYRSA_REQ_ORG        \"tahacodes\"
+set_var EASYRSA_REQ_CN         \"www.webserver.local\"
 set_var EASYRSA_REQ_EMAIL      \"admin@webserver.local\"
 set_var EASYRSA_REQ_OU         \"Community\"
 set_var EASYRSA_ALGO           \"ec\"
 set_var EASYRSA_DIGEST         \"sha512\"
+set_var EASYRSA_BATCH          \"yes\"
 """ > /home/ubuntu/easy-rsa/vars
 
 ./easyrsa build-ca nopass
@@ -31,11 +33,11 @@ cd /home/ubuntu/easy-rsa
 ./easyrsa import-req ../practice-csr/webserver.req webserver
 ./easyrsa sign-req server webserver
 
-sudo mkdir /etc/ssl/webserver
-sudo cp /home/ubuntu/easy-rsa/pki/issued/webserver.crt /etc/ssl/webserver/
-sudo cp /home/ubuntu/practice-csr/webserver.key /etc/ssl/webserver/
+mkdir /etc/ssl/webserver
+cp /home/ubuntu/easy-rsa/pki/issued/webserver.crt /etc/ssl/webserver/
+cp /home/ubuntu/practice-csr/webserver.key /etc/ssl/webserver/
 
-sudo echo """
+echo """
 server {
         listen 80;
         listen [::]:80;
@@ -61,7 +63,7 @@ server {
 }
 """ > /etc/nginx/sites-available/default
 
-sudo nginx -t
-sudo systemctl restart nginx
+nginx -t
+systemctl restart nginx
 
 echo "DONE."

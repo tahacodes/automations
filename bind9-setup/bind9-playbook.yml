@@ -1,0 +1,44 @@
+---
+- name: install and configure bind9
+  hosts: dnsservers
+  become: true
+  vars:
+    DOMAIN: 'webserver.local'
+    ARECORD: '193.176.243.162'
+
+  tasks:
+
+    - name: install bind9
+      apt:
+        name: bind9
+        state: latest
+        update_cache: yes
+
+    - name: copy named.conf.options
+      copy:
+        src: bind/named.conf.options
+        dest: /etc/bind/named.conf.options
+
+    - name: named.conf.options
+      template:
+        src: bind/named.conf.local.j2
+        dest: /etc/bind/named.conf.local
+
+    - name: dns server ipv4
+      shell: hostname -I
+      register: ipv4
+
+    - name: zone file
+      template:
+        src: bind/db.zonefile.j2
+        dest: /etc/bind/db.{{ DOMAIN }}
+
+    - name: restart bind9
+      service:
+        name: bind9
+        state: restarted
+
+    - name: restart systemd-resolved
+      service:
+        name: systemd-resolved
+        state: restarted

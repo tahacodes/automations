@@ -1,0 +1,16 @@
+$TTL    604800
+@       IN      SOA     ns1.{{ DOMAIN }}. email.{{ DOMAIN }}. (
+                              3         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+; list nameservers
+                 IN      NS      ns1.{{ DOMAIN }}.
+                 IN      NS      ns2.{{ DOMAIN }}.
+
+; address to name mapping
+{{ DOMAIN }}.           IN      A       {{ ARECORD }}
+www.{{ DOMAIN }}.       IN      A       {{ ARECORD }}
+ns1.{{ DOMAIN }}.       IN      A       {{ ipv4.stdout }}
+ns2.{{ DOMAIN }}.       IN      A       {{ ipv4.stdout }}
