@@ -1,0 +1,9 @@
+---
+ip_address: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+domain_url: "webserver.local"
+nginx_conf: "{{ domain_url }}.conf"
+ssl_path: "/etc/nginx/ssl"
+
+db_name: 'wordpress'
+db_user: 'wordpressuser'
+db_pw: 'password'

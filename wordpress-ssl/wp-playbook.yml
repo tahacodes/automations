@@ -1,0 +1,114 @@
+---
+- hosts: webservers
+  gather_facts: yes
+  become: true
+  become_user: root
+
+  vars_files:
+    - variables.yml
+    
+  tasks:
+    - name: get ip address
+      shell: hostname  -I | cut -f1 -d' '
+      register: ip_address
+    - set_fact:
+        ip_address={{ ip_address.stdout }}
+
+    - name: install packages
+      apt:
+        name: [ 'nginx', 'mysql-server', 'python3-pymysql', 'php-fpm', 'php-mysql', 'php-curl', 'php-gd', 'php-intl', 'php-mbstring', 'php-soap', 'php-xml', 'php-xmlrpc', 'php-zip' ]
+        update_cache: yes
+        state: latest
+
+    - name: create wordpress database
+      mysql_db:
+        name: "{{ db_name }}"
+        state: present
+        login_user: root
+        login_password: "{{ db_pw }}"
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+            
+    - name: create wordpress db_user and grant permissions
+      mysql_user:
+        name: "{{ db_user }}"
+        password: "{{ db_pw }}"
+        priv: "{{ db_name }}.*:ALL"
+        state: present
+        login_user: root
+        login_password: "{{ db_pw }}"
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        
+    - name: download wp-cli
+      get_url:
+        url="https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar"
+        dest="~/"
+
+    - name: touch ~/wp-cli.phar and make executable
+      ansible.builtin.file:
+        path: ~/wp-cli.phar
+        state: touch
+        mode: +x
+
+    - name: move wp-cli
+      command: mv ~/wp-cli.phar /usr/local/bin/wp-cli
+
+    - name: create a website directory
+      ansible.builtin.file:
+        path: /var/www/wordpress
+        state: directory
+
+    - name: download wordpress
+      command: wp-cli core download
+        --path="/var/www/wordpress"
+        --allow-root
+
+    - name: Configure WordPress
+      command: wp-cli config create
+        --path="/var/www/wordpress"
+        --dbname="{{ db_name }}"
+        --dbuser="{{ db_user }}"
+        --dbpass="{{ db_pw }}"
+        --locale=en_DB
+        --allow-root
+
+    - name: install wordpress tables
+      command: wp-cli core install
+        --path="/var/www/wordpress"
+        --url="{{ ip_address }}"
+        --title="{{ domain_url }}"
+        --admin_user="{{ db_user }}"
+        --admin_password="{{ db_pw }}"
+        --admin_email=email@gmail.com
+        --allow-root
+
+    - name: change websites ownership
+      ansible.builtin.file:
+        path: /var/www/wordpress
+        state: directory
+        recurse: yes
+        owner: www-data
+        group: www-data
+    
+    - name: nginx config
+      template:
+        src: "nginx/nginx.conf.j2"
+        dest: "/etc/nginx/sites-available/{{ nginx_conf }}"
+
+    - name: unlink default site
+      ansible.builtin.file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+      notify: restart nginx
+
+    - name: link new config
+      ansible.builtin.file:
+        src: "/etc/nginx/sites-available/{{ nginx_conf }}"
+        dest: "/etc/nginx/sites-enabled/{{ nginx_conf }}"
+        state: link
+      notify: restart nginx
+
+  handlers:
+  - name: restart nginx
+    service: 
+      name: nginx
+      state: restarted
