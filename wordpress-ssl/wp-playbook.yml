@@ -98,17 +98,65 @@
       ansible.builtin.file:
         path: /etc/nginx/sites-enabled/default
         state: absent
-      notify: restart nginx
 
     - name: link new config
       ansible.builtin.file:
         src: "/etc/nginx/sites-available/{{ nginx_conf }}"
         dest: "/etc/nginx/sites-enabled/{{ nginx_conf }}"
         state: link
-      notify: restart nginx
 
-  handlers:
-  - name: restart nginx
-    service: 
-      name: nginx
-      state: restarted
+    - name: install easy-rsa and openssl
+      apt:
+        name: [ 'easy-rsa', 'openssl' ]
+        update_cache: yes
+        state: latest
+
+    - name: mkdir easy-rsa directory
+      shell: 'mkdir /home/ubuntu/easy-rsa'
+
+    - name: create symbolic link 
+      shell: 'ln -s /usr/share/easy-rsa/* /home/ubuntu/easy-rsa/'
+
+    - name: change ownership
+      shell: 'chmod 700 /home/ubuntu/easy-rsa/'
+
+    - name: run init-pki
+      shell: '/home/ubuntu/easy-rsa/easyrsa init-pki'
+
+    - name: copy vars
+      copy:
+        src: easyrsa-vars
+        dest: /home/ubuntu/easy-rsa/vars
+
+    - name: build ca
+      shell: '/home/ubuntu/easy-rsa/easyrsa build-ca nopass'
+
+    - name: mkdir practice-csr
+      shell: 'mkdir /home/ubuntu/practice-csr'
+
+    - name: genrsa webserver.key
+      shell: 'openssl genrsa -out /home/ubuntu/practice-csr/webserver.key'
+
+    - name: gen req
+      shell: 'openssl req -new -key /home/ubuntu/practice-csr/webserver.key -out /home/ubuntu/practice-csr/webserver.req -subj \
+        /C=US/ST=New\ York/L=New\ York\ City/O=tahacodes/OU=IT/CN=www.webserver.local/emailAddress=admin@webserver.local'
+
+    - name: import req
+      shell: '/home/ubuntu/easy-rsa/easyrsa import-req /home/ubuntu/practice-csr/webserver.req webserver'
+
+    - name: sing req
+      shell: '/home/ubuntu/easy-rsa/easyrsa sign-req server webserver'
+
+    - name: mkdir /etc/ssl/webserver
+      shell: 'mkdir /etc/ssl/webserver'
+
+    - name: copy webserver.crt
+      shell: 'cp /home/ubuntu/pki/issued/webserver.crt /etc/ssl/webserver/'
+
+    - name: copy webserver.key
+      shell: 'cp /home/ubuntu/practice-csr/webserver.key /etc/ssl/webserver/'
+
+    - name: restart nginx
+      service: 
+        name: nginx
+        state: restarted

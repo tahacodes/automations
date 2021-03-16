@@ -1,19 +1,16 @@
-#server {
-#        listen 80;
-#        listen [::]:80;
-#        server_name {{ domain_url }} www.{{ domain_url }} localhost;
-#        return 301 https://$host$request_uri;
-#}
-
 server {
         listen 80;
         listen [::]:80;
-        # listen 443 ssl default_server;
-        # listen [::]:443 ssl default_server;
+        server_name webserver.local www.webserver.local;
+        return 301 https://$host$request_uri;
+}
 
-#        ssl_certificate {{ ssl_path }}/WSERVER.crt;
-#        ssl_certificate_key {{ ssl_path }}/WSERVER.key;
-#        ssl_client_certificate {{ ssl_path }}/ca.crt;
+server {
+        listen 443 ssl default_server;
+        listen [::]:443 ssl default_server;
+
+        ssl_certificate /etc/ssl/webserver/webserver.crt;
+        ssl_certificate_key /etc/ssl/webserver/webserver.key;
 
         root /var/www/wordpress;
         index index.php index.html index.htm;
