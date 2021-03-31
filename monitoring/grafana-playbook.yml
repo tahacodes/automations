@@ -1,0 +1,24 @@
+---
+- name: install grafana
+  hosts: grafana
+  become: true
+
+  tasks:
+
+    - name: install requirements
+      apt:
+        name: [apt-transport-https, software-properties-common, wget]
+        state: latest
+        update_cache: yes
+
+    - name: add grafana gpg hey
+      shell: 'wget -q -O - https://packages.grafana.com/gpg.key | sudo apt-key add -'
+
+    - name: add grafana apt repo
+      shell: 'echo "deb https://packages.grafana.com/oss/deb stable main" | sudo tee -a /etc/apt/sources.list.d/grafana.list'
+
+    - name: install requirements
+      apt:
+        name: grafana
+        state: latest
+        update_cache: yes

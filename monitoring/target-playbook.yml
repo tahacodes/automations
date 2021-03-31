@@ -1,0 +1,17 @@
+---
+- name: install node-exporter
+  hosts: targets
+  become: true
+
+  tasks:
+
+    - name: install prometheus-node-exporter
+      apt:
+        name: prometheus-node-exporter
+        state: latest
+        update_cache: yes
+
+    - name: restart node-exporter
+      service:
+        name: prometheus-node-exporter
+        state: restarted

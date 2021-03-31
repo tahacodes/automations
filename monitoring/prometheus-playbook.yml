@@ -1,0 +1,44 @@
+---
+- name: install and configure prometheus
+  hosts: prometheus
+  become: true
+  vars:
+    TARGET: '37.152.181.84:9100'
+
+  tasks:
+
+    - name: install prometheus
+      apt:
+        name: [prometheus, prometheus-node-exporter, prometheus-alertmanager]
+        state: latest
+        update_cache: yes
+
+    - name: prometheus yml config
+      template:
+        src: prometheus/prometheus.yml.j2
+        dest: /etc/prometheus/prometheus.yml
+
+    - name: alertmanager yml config
+      copy:
+        src: prometheus/alertmanager.yml
+        dest: /etc/prometheus/alertmanager.yml
+
+    - name: rules yml config
+      copy:
+        src: prometheus/rules.yml
+        dest: /etc/prometheus/rules.yml
+
+    - name: alertmanager systemd service
+      copy:
+        src: prometheus/prometheus-alertmanager.service
+        dest: /lib/systemd/system/prometheus-alertmanager.service
+
+    - name: restart prometheus
+      service:
+        name: prometheus
+        state: restarted
+
+    - name: restart prometheus-alertmanager
+      service:
+        name: prometheus-alertmanager
+        state: restarted

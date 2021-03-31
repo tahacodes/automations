@@ -1,0 +1,8 @@
+[prometheus]
+ubuntu@193.176.240.146
+
+[grafana]
+ubuntu@193.176.240.173
+
+[targets]
+ubuntu@37.152.181.84

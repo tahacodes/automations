@@ -1,0 +1,16 @@
+[Unit]
+Description=Alertmanager for prometheus
+Documentation=https://prometheus.io/docs/alerting/alertmanager/
+
+[Service]
+Restart=always
+User=prometheus
+ExecStart=/usr/bin/prometheus-alertmanager \
+        --cluster.advertise-address=0.0.0.0:9093 \
+        --config.file=/etc/prometheus/alertmanager.yml
+ExecReload=/bin/kill -HUP $MAINPID
+TimeoutStopSec=20s
+SendSIGKILL=no
+
+[Install]
+WantedBy=multi-user.target
