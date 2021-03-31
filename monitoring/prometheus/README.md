@@ -1,0 +1,1 @@
+change SLACK API URL in prometheus/alertmanager.yml file.
